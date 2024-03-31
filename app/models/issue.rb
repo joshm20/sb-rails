@@ -47,9 +47,16 @@ class Issue < ApplicationRecord
     	validate_order_length(self.tasks, :task_order)
     end
 
+	def closed?
+		return self.state == "Closed"
+	end
+
     def closable
       project = self.project
       sprint = self.sprint
+	  if sprint && sprint.closed?
+		return true
+	  end
 	  if sprint && project.current_sprint == sprint.id
 		return true
 	  end

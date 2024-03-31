@@ -11,12 +11,14 @@ class SyncChannel < ApplicationCable::Channel
     update_users
     @@uuids.delete connection.connection_identifier
 
-    if !connection.current_user.admin?
-      projects = connection.current_user.projects
-      projects.each do |proj|
-        update_users_for_project(proj.id)
+    if connection.current_user
+      if !connection.current_user.admin?
+        projects = connection.current_user.projects
+        projects.each do |proj|
+          update_users_for_project(proj.id)
+        end
       end
-    end
+    end 
   end
 
   def receive(data)
@@ -26,7 +28,8 @@ class SyncChannel < ApplicationCable::Channel
 
   def sync(data)
     # if current_user.admin? || data['selector'] != 'users'
-      stream_from "sync:#{data['selector']}"
+    puts "--------------------------------- sync #{data}"
+    stream_from "sync:#{data['data']['selector']}"
     # end
   end
 
@@ -36,7 +39,9 @@ class SyncChannel < ApplicationCable::Channel
 
   def auth(auth_info) 
     # pp ActionCable.server.connections
-    user = User.find_user_for_jwt(auth_info['token'])
+    puts "*** auth #{auth_info}"
+    user = User.find_user_for_jwt(auth_info['data']['token'])
+    puts ">>>>>>>>>>> auth #{user}"
     connection.current_user = user
 
     uuid = connection.connection_identifier
